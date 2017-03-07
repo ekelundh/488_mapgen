@@ -1,0 +1,307 @@
+package Parser;
+
+import java_cup.runtime.*;
+
+
+
+parser code  {: 
+    public void report_error(String message, Object info) {
+        StringBuilder m = new StringBuilder("Error ");
+
+        if (info instanceof java_cup.runtime.Symbol)
+            m.append( "("+info.toString()+")" );
+
+        m.append(" : "+message);
+
+        System.out.println(m);
+    }
+
+    public void report_fatal_error(String message, Object info) {
+        report_error(message, info);
+        throw new RuntimeException("Fatal Syntax Error");
+    }
+:};
+
+terminal BOOLEAN; // primitive_type
+terminal INT, ACTOR, MAP; // premitive_type
+terminal LBRACK, RBRACK; // array_type
+terminal DOT; // qualified_name
+terminal SEMICOLON, MULT, COMMA, LBRACE, RBRACE, EQ, LPAREN, RPAREN, COLON;
+terminal VOID; // method_header
+terminal IF, ELSE; // if_then_statement, if_then_else_statement
+terminal WHILE; // while_statement
+terminal BREAK; // break_statement
+terminal RETURN; // return_statement
+terminal PLUS, MINUS, NOT, DIV, MOD;
+terminal LT, GT, LTEQ, GTEQ; // relational_expression
+terminal EQEQ, NOTEQ; // equality_expression
+terminal ANDAND; // conditional_and_expression
+terminal OROR; // conditional_or_expression
+terminal MULTEQ, DIVEQ, MODEQ, PLUSEQ, MINUSEQ; // assignment_operator
+terminal ACTORSDECL, MAPOPTIONSDECL, GENERATOR; //
+
+terminal java.lang.Number INTEGER_LITERAL;
+terminal java.lang.Boolean BOOLEAN_LITERAL;
+terminal java.lang.Character CHARACTER_LITERAL;
+terminal java.lang.String IDENTIFIER; // name
+
+
+// 19.2) The Syntactic Grammar
+non terminal program;
+
+// 19.4) Types, Values, and Variables
+non terminal primitive_type, type, non_primative_type;
+
+// program
+non terminal statements_block;
+
+non terminal actor_declaration_block, actor_declarations, actor_declaration;
+non terminal map_option_declaration_opt, map_option_declarations, map_option_declaration, comma_identifiers;
+non terminal mapgen_definition;
+non terminal function_definitions_opt, function_definitions, function_definition;
+non terminal function_parameters_opt, function_parameters, function_parameter;
+
+non terminal statements, statement;
+non terminal variable_declaration;
+non terminal function_call_statement, function_call, argument_list_opt, argument_list;
+non terminal return_statement;
+non terminal while_statement, break_statement;
+non terminal if_statement;
+non terminal assignment_statement, map_assignment_statement, map_assignment_access, map_simple_access;
+non terminal map_assignment_expression, expression;
+non terminal assignment_operator, binary_operator, unary_operator;
+
+precedence nonassoc EQEQ, LT, GT, LTEQ, GTEQ, NOTEQ;
+precedence left ANDAND, OROR;
+precedence left PLUS, MINUS;
+precedence left MULT, DIV, MOD;
+precedence left LPAREN, RPAREN;
+precedence left ELSE;
+
+
+start with program;
+
+// types
+type ::= primitive_type:pt | non_primative_type:npt
+    ;
+
+primitive_type ::=
+        BOOLEAN
+    |   ACTOR
+    |   INT
+    |   MAP
+    ;
+non_primative_type::= IDENTIFIER;
+
+statements_block ::= LBRACE statements:s RBRACE;
+
+// 19.2) The Syntactic Grammar
+program ::=
+        actor_declaration_block:adb
+        map_option_declaration_opt:modo
+        mapgen_definition:md
+        function_definitions_opt:fdo
+	;
+
+
+// Actor decl
+actor_declaration_block ::=
+        ACTORSDECL LBRACE actor_declarations:ads RBRACE
+        ;
+
+actor_declarations ::=
+        actor_declaration:ad
+    |   actor_declarations:ad1 actor_declaration:ad2
+    ;
+
+actor_declaration ::=
+        IDENTIFIER:ident EQ CHARACTER_LITERAL:charl SEMICOLON
+	;
+
+
+// map options decl optional block
+map_option_declaration_opt ::=
+        MAPOPTIONSDECL LBRACE map_option_declarations:mods RBRACE
+    | ;
+
+map_option_declarations ::=
+        map_option_declaration:mod
+    |   map_option_declarations:mods map_option_declaration:mod
+    ;
+
+map_option_declaration ::=
+        IDENTIFIER:lident EQ IDENTIFIER:rident SEMICOLON
+    |   IDENTIFIER:lident EQ LBRACK comma_identifiers:ridents RBRACK SEMICOLON
+	;
+
+comma_identifiers ::=
+        IDENTIFIER:ident
+    |   comma_identifiers:idents COMMA IDENTIFIER:ident
+    ;
+
+// mapgen definition
+
+mapgen_definition ::=
+        MAP GENERATOR LPAREN RPAREN statements_block:sb
+    ;
+
+// function definition
+function_definitions_opt ::=
+        function_definitions:fundefs
+    | ;
+
+
+function_definitions ::=
+        function_definition:fundef
+    |   function_definitions:fundefs function_definition:fundef
+    ;
+
+function_definition ::=
+		type:t IDENTIFIER:ident LPAREN function_parameters_opt:funparamsopt RPAREN statements_block:sb
+	|	VOID:t IDENTIFIER:ident LPAREN function_parameters_opt:funparamsopt RPAREN statements_block:sb
+    ;
+
+function_parameters_opt ::=
+        function_parameters:funparams
+    | ;
+
+function_parameters ::=
+    function_parameter:funparam
+    | function_parameters:funparams COMMA function_parameter:funparam
+    ;
+
+function_parameter ::=
+        type:t IDENTIFIER:ident
+	;
+
+
+// statements
+statements ::=
+        statement:stmt
+    |   statements:stmts statement:stmt
+    ;
+
+
+statement ::=
+        variable_declaration:vd
+    |   assignment_statement:as
+    |   if_statement:ifs
+    |   while_statement:whiles
+    |   return_statement:rets
+    |   function_call_statement:fcs
+    |   break_statement:brks
+    |   map_assignment_statement:mas
+    ;
+
+
+// declaring new variable
+variable_declaration ::=
+        type:t IDENTIFIER:ident SEMICOLON
+    |   type:t IDENTIFIER:ident EQ expression:expr SEMICOLON
+    ;
+
+
+// function
+function_call_statement ::=
+        function_call:fc SEMICOLON
+    ;
+function_call ::=
+        IDENTIFIER:ident LPAREN argument_list_opt:alo RPAREN
+    |   MAP LPAREN expression:expr1 COMMA expression:expr2 RPAREN
+    ;
+
+argument_list_opt ::=
+    argument_list:al
+    | ;
+
+argument_list ::=
+		expression:expr
+	|	argument_list:al COMMA expression:expr
+    ;
+
+// return statement
+return_statement ::=
+        RETURN expression:expr SEMICOLON
+    ;
+
+// while statement
+break_statement ::=
+        BREAK SEMICOLON
+    ;
+
+while_statement ::=
+        WHILE LPAREN expression:expr RPAREN statements_block:sb
+    ;
+
+// if statements
+if_statement ::=
+        IF LPAREN expression:expr RPAREN statements_block:sb
+    |   IF LPAREN expression:expr RPAREN statements_block:sb1 ELSE statements_block:sb2
+    ;
+
+// Assignments
+assignment_statement  ::=
+        IDENTIFIER:ident assignment_operator:assignop expression:expr SEMICOLON
+	;
+
+map_assignment_statement ::=
+        map_assignment_access:maa EQ expression:expr SEMICOLON
+    ;
+
+map_assignment_access ::=
+        IDENTIFIER:ident LBRACK map_assignment_expression:maexpr1 RBRACK LBRACK map_assignment_expression:maexpr2 RBRACK
+    ;
+
+map_assignment_expression ::=
+        expression:expr
+    |   expression:expr1 COLON expression:expr2
+    ;
+
+map_simple_access ::=
+        IDENTIFIER:ident LBRACK expression:expr1 RBRACK LBRACK expression:expr2 RBRACK
+    ;
+
+
+expression ::=
+        IDENTIFIER:ident1 DOT IDENTIFIER:ident2
+    |   expression:expr1 binary_operator:binop expression:expr2
+    |   unary_operator:unaryop expression:expr
+    |   INTEGER_LITERAL:intl
+    |   BOOLEAN_LITERAL:booll
+    |   IDENTIFIER:ident
+    |   map_simple_access:mapsa
+    |   function_call:funcall
+    |   LPAREN expression:expr RPAREN
+    ;
+
+
+assignment_operator ::=
+		EQ
+	|	MULTEQ
+	|	DIVEQ
+	|	MODEQ
+	|	PLUSEQ
+	|	MINUSEQ
+	;
+
+
+binary_operator ::=
+        GT
+    |   LT
+    |   EQEQ
+    |   LTEQ
+    |   GTEQ
+    |   NOTEQ
+    |   ANDAND
+    |   OROR
+    |   PLUS
+    |   MINUS
+    |   MULT
+    |   DIV
+    |   MOD
+    ;
+
+unary_operator ::=
+        NOT
+    |   MINUS
+    ;

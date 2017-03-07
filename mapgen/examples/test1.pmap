@@ -1,0 +1,22 @@
+Actors {
+	blueFood = 'b' ;
+	energizer = 'e';
+	pacman = 'p';
+}
+
+
+map generator(){
+	map myMap = map(3,4);
+
+	myMap[2][One()] = pacman;
+
+	if (myMap[2][1] == pacman) {
+		myMap[2][2] = blueFood; // blueeeeeeeeee fooooooood
+	}
+
+	return myMap;
+}
+
+int One(){
+    return 1;
+}

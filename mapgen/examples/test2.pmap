@@ -1,0 +1,53 @@
+Actors {
+	blueFood = 'b' ;  // additional actor
+	energizer = 'e';
+	monster = 'm';
+	pacman = 'p';
+	wall = 'w';
+	space = ' ';
+}
+
+MapOptions{
+    player = pacman;
+    border = [wall, pacman];
+    playerReachable = [monster, energizer];
+}
+
+/*
+    This is Main function.
+*/
+map generator(){
+	// this is our main function
+	map myMap = map(3,4);
+    // create 3 by 4 map. height = 3, width = 4
+	fillWalls(myMap);
+
+	myMap[2][2] = pacman;
+	//random int between 1(inclusive) and 3(exclusive). i.e. 1 or 2
+
+	if (myMap[2][1] == pacman) {
+		myMap[2][2] = blueFood;
+	} else {
+		myMap[2][1] = energizer;
+	}
+
+	return myMap;	// return map that will be used for generation
+}
+
+void fillWalls(map curMap){
+	int i = 0;
+	// dont need to do this here, but want to show
+	// proper usage of the actor keyword
+	actor wallActor = wall;
+
+	//Top and bottom of map to wall. With loops
+	while(i < curMap.width){
+		curMap[0][i] = wallActor;
+		curMap[curMap.height-1][i] = wallActor;
+		i += 1;
+	}
+
+	//Left and right sides to wall. Without using loops.
+    curMap[0:-1][0] = wallActor;
+    curMap[0:-1][curMap.width-1] = wallActor;
+}

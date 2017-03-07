@@ -1,0 +1,18 @@
+# IntelliJ
+.idea/
+out/
+*.iml
+
+# Scanner/Parser java file. should be generated using build.dat
+/src/Parser/Parser.java
+/src/Parser/sym.java
+/src/Scanner/Scanner.java
+
+# Example output.
+/examples/test1.xml
+/examples/test1.html
+/examples/test2.xml
+/examples/test2.html
+/examples/test3.xml
+/examples/test3.html
+/tempOut.xml

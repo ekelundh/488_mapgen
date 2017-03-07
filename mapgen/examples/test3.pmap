@@ -1,0 +1,13 @@
+Actors {
+	pacman = 'p' ;  // minimum one actor
+}
+
+/*
+    This is Main function.
+*/
+map generator(){
+    //generate an empty map
+	map myMap = map(3,4);
+	myMap[0][0] = pacman;
+	return myMap;	// return map that will be used for generation
+}
